@@ -5,12 +5,14 @@ const cookieParser = require("cookie-parser");
 const TelegramBot = require("node-telegram-bot-api");
 const { UserModel } = require("./models/User.model");
 const connection = require("./database/server.js");
+const cors = require("cors"); 
 
 const gameName = "ZuraTap";
 const webURL = "https://test.d1zpxmmc54858w.amplifyapp.com";
 /* const webURL = "http://192.168.1.8:3000"; */
 
 const server = express();
+server.use(cors());
 let currentUserId = [];
 let currentUser;
 server.use(bodyParser.json());
