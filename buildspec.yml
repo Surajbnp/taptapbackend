@@ -1,0 +1,21 @@
+version: 1
+phases:
+  preBuild:
+    commands:
+      - echo Installing dependencies...
+      - npm ci  # Installs all dependencies based on package-lock.json
+  build:
+    commands:
+      - echo No build step needed for Express.js server.
+  postBuild:
+    commands:
+      - echo Build complete.
+
+artifacts:
+  baseDirectory: /
+  files:
+    - '**/*'
+
+cache:
+  paths:
+    - node_modules/**/*
