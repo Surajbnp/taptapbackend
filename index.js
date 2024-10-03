@@ -209,8 +209,8 @@ bot.on("inline_query", function (iq) {
 
 // server.use(express.static(path.join(__dirname, "public")));
 
-server.get("/get", (req, res) => {
-  res.send("response", currentUser);
+server.get("/", (req, res) => {
+  res.send("Homepage");
 });
 
 server.post("/highscore/:score", function (req, res, next) {
