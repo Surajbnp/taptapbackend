@@ -7,8 +7,8 @@ const { UserModel } = require("./models/User.model");
 const connection = require("./database/server.js");
 
 const gameName = "ZuraTap";
-// const webURL = "https://test.d1zpxmmc54858w.amplifyapp.com";
-const webURL = "http://192.168.1.8:3000";
+const webURL = "https://test.d1zpxmmc54858w.amplifyapp.com";
+/* const webURL = "http://192.168.1.8:3000"; */
 
 const server = express();
 let currentUserId = [];
