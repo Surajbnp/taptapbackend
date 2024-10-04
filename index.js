@@ -14,7 +14,7 @@ const server = express();
 server.use(cors());
 let currentUserId = [];
 let currentUser;
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com?id=${currentUser}`;
+const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 server.use(bodyParser.json());
 server.use(cookieParser("surja4"));
 
@@ -27,6 +27,8 @@ const bot = new TelegramBot("7439126507:AAFsGlejIE1CMyMWr-qlIbLFvIT9BGp02lA", {
     },
   },
 });
+
+console.log(currentUser);
 
 const port = process.env.PORT || 8080;
 const queries = {};
