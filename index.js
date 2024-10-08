@@ -8,7 +8,7 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "ZuraTap";
-/* const webURL = "http://192.168.1.8:3000"; */
+// const webURL = "http://192.168.1.9:3000";
 
 const server = express();
 server.use(cors());
@@ -49,7 +49,25 @@ function getGameHighScore(userId, options, res) {
         console.log(
           `No high score found for user ${userId}, setting initial high score.`
         );
-        // setInitialHighScore(userId, options, res);
+        bot
+          .setGameScore(query.from.id, 0, options)
+          .then(() => {
+            getGameHighScore(query.from.id, options, res);
+          })
+          .catch((err) => {
+            if (
+              err.response.body.description ===
+              "Bad Request: BOT_SCORE_NOT_MODIFIED"
+            ) {
+              return res
+                .status(204)
+                .send("New score is inferior to user's previous one");
+            } else {
+              return res
+                .status(500)
+                .send("An error occurred while setting the score");
+            }
+          });
       }
     })
     .catch((err) => {
@@ -126,6 +144,13 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
         const newUser = new UserModel({
           userId: referralCode,
           referred: [referredUserData],
+          maxEnergyVal: 500,
+          recoveryVal: 1,
+          isDailyLogged: false,
+          tapValue: 1,
+          isFollowedTg: false,
+          isFollowedInsta: false,
+          isFollowedTwitter: false,
         });
         await newUser.save();
         console.log("New user created and referred data added.");
@@ -162,7 +187,7 @@ server.get("/referrals", async (req, res) => {
   }
 });
 
-bot.on("callback_query", function (query) {
+bot.on("callback_query", async function (query) {
   const userId = query?.from?.id;
   currentUser = userId;
 
@@ -231,6 +256,7 @@ server.post("/highscore/:score", function (req, res, next) {
     options = {
       chat_id: query.message.chat.id,
       message_id: query.message.message_id,
+      force: true,
     };
   } else {
     options = {
@@ -257,6 +283,34 @@ server.post("/highscore/:score", function (req, res, next) {
           .send("An error occurred while setting the score");
       }
     });
+});
+
+server.get("/user", async (req, res) => {
+  try {
+    let data = await UserModel.findOne({ userId: currentUser });
+    res.send(data);
+  } catch {
+    res.send("something went wrong");
+  }
+});
+
+server.post("/completetask", async (req, res) => {
+  const data = req.body;
+  try {
+    let response = await UserModel.findOneAndUpdate(
+      { userId: currentUser },
+      data,
+      { new: true }
+    );
+    if (response) {
+      res.send("task completed!");
+    } else {
+      res.status(404).send("User not found!");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Something went wrong!");
+  }
 });
 
 server.get("/getHighScore", function (req, res, next) {
