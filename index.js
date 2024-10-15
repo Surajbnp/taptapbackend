@@ -8,13 +8,13 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "ZuraTap";
-// const webURL = "http://192.168.1.9:3000";
+/* const webURL = "http://192.168.1.9:3000"; */
+const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 
 const server = express();
 server.use(cors());
 let currentUserId = [];
 let currentUser;
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 server.use(bodyParser.json());
 server.use(cookieParser("surja4"));
 
@@ -160,6 +160,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     }
   } else {
     bot.sendMessage(chatId, "Welcome to the bot!");
+    console.log("start hogya bro");
   }
 });
 
@@ -193,6 +194,14 @@ bot.on("callback_query", async function (query) {
 
   let options = {};
 
+  let isAlreadyUser = await UserModel.findOne({ userId: currentUser });
+  if (isAlreadyUser === null) {
+    let data = new UserModel({
+      userId: userId,
+    });
+    await data.save();
+  }
+
   // Check if the query has a message or inline_message_id and set options accordingly
   if (query.message) {
     options = {
@@ -211,7 +220,7 @@ bot.on("callback_query", async function (query) {
 
   // Now call getGameHighScore with the correct options
   getGameHighScore(userId, options, {
-    send: (message) => console.log(`Response: ${message}`), // This will log the response
+    send: (message) => console.log(`Response: ${message}`),
   });
 
   if (query.game_short_name !== gameName) {
