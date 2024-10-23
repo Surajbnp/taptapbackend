@@ -8,8 +8,9 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "ZuraTap";
-// const webURL = "http://192.168.1.9:3000";
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+const webURL = "http://192.168.1.9:3000";
+// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+const channelId = "@teampomeme";
 
 const server = express();
 server.use(cors());
@@ -341,6 +342,33 @@ server.get("/getHighScore", function (req, res, next) {
     };
   }
   getGameHighScore(query.from.id, options, res);
+});
+
+// checking member or not
+
+server.get("/checkmember", async (req, res) => {
+  const userId = currentUser;
+
+  if (!userId) {
+    return res.status(400).send("User ID is required");
+  }
+
+  try {
+    const chatMember = await bot.getChatMember(channelId, userId);
+
+    if (
+      chatMember.status === "member" ||
+      chatMember.status === "administrator" ||
+      chatMember.status === "creator"
+    ) {
+      res.status(200).send(chatMember);
+    } else {
+      res.status(403).send("User has not joined the channel");
+    }
+  } catch (error) {
+    console.error("Error checking channel join status:", error);
+    res.status(500).send("An error occurred while checking channel status");
+  }
 });
 
 server.listen(port, async (req, res) => {
