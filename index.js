@@ -8,8 +8,8 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "ZuraTap";
-const webURL = "http://192.168.1.9:3000";
-// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+// const webURL = "http://192.168.1.9:3000";
+const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
 const server = express();
@@ -257,7 +257,7 @@ server.post("/highscore/:score", function (req, res, next) {
   }
 
   const realScore = parseInt(req.params.score, 10);
-
+  setIsRotating(true);
   let query = queries[req?.query?.id];
   let options;
 
