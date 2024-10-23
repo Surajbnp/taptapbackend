@@ -257,7 +257,6 @@ server.post("/highscore/:score", function (req, res, next) {
   }
 
   const realScore = parseInt(req.params.score, 10);
-  setIsRotating(true);
   let query = queries[req?.query?.id];
   let options;
 
