@@ -19,7 +19,7 @@ let currentUser;
 server.use(bodyParser.json());
 server.use(cookieParser("surja4"));
 
-const bot = new TelegramBot("7439126507:AAFsGlejIE1CMyMWr-qlIbLFvIT9BGp02lA", {
+const bot = new TelegramBot("7461446719:AAHQLQxYUG_OgxCI8XKD_l05sm06HK8uLKw", {
   polling: {
     interval: 1000,
     autoStart: true,
