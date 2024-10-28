@@ -8,7 +8,7 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "ZuraTap";
-// const webURL = "http://192.168.1.9:3000";
+// const webURL = "http://192.168.1.9:3001";
 const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
@@ -256,7 +256,7 @@ server.post("/highscore/:score", function (req, res, next) {
   }
 
   const realScore = parseInt(req.params.score, 10);
-  let query = queries[req?.query?.id];
+  let query = queries[currentUser];
   let options;
 
   if (query.message) {
@@ -321,11 +321,11 @@ server.post("/completetask", async (req, res) => {
 });
 
 server.get("/getHighScore", function (req, res, next) {
-  if (!Object.hasOwnProperty.call(queries, req?.query?.id)) {
+  if (!Object.hasOwnProperty.call(queries, currentUser)) {
     return next();
   }
 
-  let query = queries[req?.query?.id];
+  let query = queries[currentUser];
   let options;
 
   if (query.message) {
