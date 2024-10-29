@@ -8,7 +8,7 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "ZuraTap";
-// const webURL = "http://192.168.1.9:3001";
+// const webURL = "http://192.168.1.9:3000";
 const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
@@ -28,7 +28,6 @@ const bot = new TelegramBot("7439126507:AAFsGlejIE1CMyMWr-qlIbLFvIT9BGp02lA", {
     },
   },
 });
-
 
 const port = process.env.PORT || 8080;
 const queries = {};
@@ -138,6 +137,15 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
             { $push: { referred: referredUserData } }
           );
           console.log("Referred user added successfully.");
+
+          // adding +20000 points for referrals
+          let currentScore = user?.userScore;
+          let updatedScore = currentScore + 20000;
+          await UserModel.findOneAndUpdate(
+            { userId: currentUser },
+            { userScore: updatedScore }
+          );
+          ///////////////////////////
         }
       } else {
         // Create a new user with the referred user data
@@ -250,46 +258,61 @@ server.get("/", (req, res) => {
   res.send("Homepage");
 });
 
-server.post("/highscore/:score", function (req, res, next) {
-  if (!Object.hasOwnProperty.call(queries, req.query.id)) {
-    return next();
-  }
+// server.post("/highscore/:score", function (req, res, next) {
+//   if (!Object.hasOwnProperty.call(queries, req.query.id)) {
+//     return next();
+//   }
 
+//   const realScore = parseInt(req.params.score, 10);
+//   let query = queries[req?.query?.id];
+//   let options;
+
+//   if (query.message) {
+//     options = {
+//       chat_id: query.message.chat.id,
+//       message_id: query.message.message_id,
+//       force: true,
+//     };
+//   } else {
+//     options = {
+//       inline_message_id: query.inline_message_id,
+//       force: true,
+//     };
+//   }
+
+//   bot
+//     .setGameScore(query.from.id, realScore, options)
+//     .then(() => {
+//       getGameHighScore(query.from.id, options, res);
+//     })
+//     .catch((err) => {
+//       if (
+//         err.response.body.description === "Bad Request: BOT_SCORE_NOT_MODIFIED"
+//       ) {
+//         return res
+//           .status(204)
+//           .send("New score is inferior to user's previous one");
+//       } else {
+//         return res
+//           .status(500)
+//           .send("An error occurred while setting the score");
+//       }
+//     });
+// });
+
+server.post("/highscore/:score", async (req, res) => {
+  let userId = currentUser;
   const realScore = parseInt(req.params.score, 10);
-  let query = queries[currentUser];
-  let options;
+  try {
+    let data = await UserModel.findOneAndUpdate(
+      { userId: userId },
+      { userScore: realScore }
+    );
 
-  if (query.message) {
-    options = {
-      chat_id: query.message.chat.id,
-      message_id: query.message.message_id,
-      force: true,
-    };
-  } else {
-    options = {
-      inline_message_id: query.inline_message_id,
-      force: true,
-    };
+    res.status(200).send({ msg: "score updated!", data: data });
+  } catch (err) {
+    res.status(400).send({ msg: "something went wrong!", err });
   }
-
-  bot
-    .setGameScore(query.from.id, realScore, options)
-    .then(() => {
-      getGameHighScore(query.from.id, options, res);
-    })
-    .catch((err) => {
-      if (
-        err.response.body.description === "Bad Request: BOT_SCORE_NOT_MODIFIED"
-      ) {
-        return res
-          .status(204)
-          .send("New score is inferior to user's previous one");
-      } else {
-        return res
-          .status(500)
-          .send("An error occurred while setting the score");
-      }
-    });
 });
 
 server.get("/user", async (req, res) => {
@@ -320,26 +343,33 @@ server.post("/completetask", async (req, res) => {
   }
 });
 
-server.get("/getHighScore", function (req, res, next) {
-  if (!Object.hasOwnProperty.call(queries, currentUser)) {
-    return next();
-  }
+server.get("/getHighScore", async function (req, res) {
+  // if (!Object.hasOwnProperty.call(queries, req?.query?.id)) {
+  //   return next();
+  // }
 
-  let query = queries[currentUser];
-  let options;
+  // let query = queries[req?.query?.id];
+  // let options;
 
-  if (query.message) {
-    options = {
-      chat_id: query.message.chat.id,
-      message_id: query.message.message_id,
-    };
-  } else {
-    options = {
-      inline_message_id: query.inline_message_id,
-      force: true,
-    };
+  // if (query.message) {
+  //   options = {
+  //     chat_id: query.message.chat.id,
+  //     message_id: query.message.message_id,
+  //   };
+  // } else {
+  //   options = {
+  //     inline_message_id: query.inline_message_id,
+  //     force: true,
+  //   };
+  // }
+  // getGameHighScore(query.from.id, options, res);
+
+  try {
+    let score = await UserModel.findOne({ userId: currentUser });
+    res.status(200).send({ msg: "score fetched!", score });
+  } catch (err) {
+    res.status(400).send({ msg: "something went wrong!", error: err });
   }
-  getGameHighScore(query.from.id, options, res);
 });
 
 // checking member or not

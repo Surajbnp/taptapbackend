@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   isFollowedTg: { type: Boolean, default: false },
   isFollowedInsta: { type: Boolean, default: false },
   isFollowedTwitter: { type: Boolean, default: false },
+  userScore : {type : Number, default : 0}
 });
 
 const UserModel = mongoose.model("User", userSchema);
