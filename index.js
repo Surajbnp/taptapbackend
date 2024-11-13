@@ -32,49 +32,6 @@ const bot = new TelegramBot("7626606090:AAHvWwlTY_T7OMKY4heIGn2eRG9zKwK9-BQ", {
 const port = process.env.PORT || 8080;
 const queries = {};
 
-// function getGameHighScore(userId, options, res) {
-//   if (!options.message_id && !options.inline_message_id) {
-//     return res.send("Message ID or Inline Message ID is required.");
-//   }
-
-//   bot
-//     .getGameHighScores(userId, options)
-//     .then((highScores) => {
-//       if (highScores && highScores.length > 0) {
-//         // If a high score is found, send it back
-//         res.send(`${highScores[0]?.score}`);
-//       } else {
-//         // No high score found for the user, so set an initial high score
-//         console.log(
-//           `No high score found for user ${userId}, setting initial high score.`
-//         );
-//         bot
-//           .setGameScore(query.from.id, 0, options)
-//           .then(() => {
-//             getGameHighScore(query.from.id, options, res);
-//           })
-//           .catch((err) => {
-//             if (
-//               err.response.body.description ===
-//               "Bad Request: BOT_SCORE_NOT_MODIFIED"
-//             ) {
-//               return res
-//                 .status(204)
-//                 .send("New score is inferior to user's previous one");
-//             } else {
-//               return res
-//                 .status(500)
-//                 .send("An error occurred while setting the score");
-//             }
-//           });
-//       }
-//     })
-//     .catch((err) => {
-//       console.error(err);
-//       res.status(500).send("An error occurred while retrieving the high score");
-//     });
-// }
-
 bot.onText(/\/help/, (msg) =>
   bot.sendMessage(
     msg.from.id,
@@ -272,8 +229,9 @@ server.post("/highscore/:score", async (req, res) => {
 });
 
 server.get("/user", async (req, res) => {
+  let { id } = req?.query;
   try {
-    let data = await UserModel.findOne({ userId: currentUser });
+    let data = await UserModel.findOne({ userId: id });
     res.send(data);
   } catch {
     res.send("something went wrong");
@@ -301,6 +259,7 @@ server.post("/completetask", async (req, res) => {
 
 server.get("/getHighScore", async function (req, res) {
   let { id } = req?.query;
+  console.log(req.query, "from id");
   try {
     let score = await UserModel.findOne({ userId: id });
     res.status(200).send({ msg: "score fetched!", score });
