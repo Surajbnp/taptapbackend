@@ -8,8 +8,8 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-// const webURL = "http://172.20.10.2:3000";
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+const webURL = "http://172.20.10.2:3000";
+// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
 const server = express();
@@ -300,8 +300,9 @@ server.post("/completetask", async (req, res) => {
 });
 
 server.get("/getHighScore", async function (req, res) {
+  let { id } = req?.query;
   try {
-    let score = await UserModel.findOne({ userId: currentUser });
+    let score = await UserModel.findOne({ userId: id });
     res.status(200).send({ msg: "score fetched!", score });
   } catch (err) {
     res.status(400).send({ msg: "something went wrong!", error: err });
