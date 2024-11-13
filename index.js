@@ -7,8 +7,8 @@ const { UserModel } = require("./models/User.model");
 const connection = require("./database/server.js");
 const cors = require("cors");
 
-const gameName = "ZuraTap";
-// const webURL = "http://192.168.1.9:3000";
+const gameName = "pomemetap";
+// const webURL = "http://172.20.10.2:3000";
 const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
@@ -19,7 +19,7 @@ let currentUser;
 server.use(bodyParser.json());
 server.use(cookieParser("surja4"));
 
-const bot = new TelegramBot("7439126507:AAFsGlejIE1CMyMWr-qlIbLFvIT9BGp02lA", {
+const bot = new TelegramBot("7626606090:AAHvWwlTY_T7OMKY4heIGn2eRG9zKwK9-BQ", {
   polling: {
     interval: 1000,
     autoStart: true,
@@ -32,48 +32,48 @@ const bot = new TelegramBot("7439126507:AAFsGlejIE1CMyMWr-qlIbLFvIT9BGp02lA", {
 const port = process.env.PORT || 8080;
 const queries = {};
 
-function getGameHighScore(userId, options, res) {
-  if (!options.message_id && !options.inline_message_id) {
-    return res.send("Message ID or Inline Message ID is required.");
-  }
+// function getGameHighScore(userId, options, res) {
+//   if (!options.message_id && !options.inline_message_id) {
+//     return res.send("Message ID or Inline Message ID is required.");
+//   }
 
-  bot
-    .getGameHighScores(userId, options)
-    .then((highScores) => {
-      if (highScores && highScores.length > 0) {
-        // If a high score is found, send it back
-        res.send(`${highScores[0]?.score}`);
-      } else {
-        // No high score found for the user, so set an initial high score
-        console.log(
-          `No high score found for user ${userId}, setting initial high score.`
-        );
-        bot
-          .setGameScore(query.from.id, 0, options)
-          .then(() => {
-            getGameHighScore(query.from.id, options, res);
-          })
-          .catch((err) => {
-            if (
-              err.response.body.description ===
-              "Bad Request: BOT_SCORE_NOT_MODIFIED"
-            ) {
-              return res
-                .status(204)
-                .send("New score is inferior to user's previous one");
-            } else {
-              return res
-                .status(500)
-                .send("An error occurred while setting the score");
-            }
-          });
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).send("An error occurred while retrieving the high score");
-    });
-}
+//   bot
+//     .getGameHighScores(userId, options)
+//     .then((highScores) => {
+//       if (highScores && highScores.length > 0) {
+//         // If a high score is found, send it back
+//         res.send(`${highScores[0]?.score}`);
+//       } else {
+//         // No high score found for the user, so set an initial high score
+//         console.log(
+//           `No high score found for user ${userId}, setting initial high score.`
+//         );
+//         bot
+//           .setGameScore(query.from.id, 0, options)
+//           .then(() => {
+//             getGameHighScore(query.from.id, options, res);
+//           })
+//           .catch((err) => {
+//             if (
+//               err.response.body.description ===
+//               "Bad Request: BOT_SCORE_NOT_MODIFIED"
+//             ) {
+//               return res
+//                 .status(204)
+//                 .send("New score is inferior to user's previous one");
+//             } else {
+//               return res
+//                 .status(500)
+//                 .send("An error occurred while setting the score");
+//             }
+//           });
+//       }
+//     })
+//     .catch((err) => {
+//       console.error(err);
+//       res.status(500).send("An error occurred while retrieving the high score");
+//     });
+// }
 
 bot.onText(/\/help/, (msg) =>
   bot.sendMessage(
@@ -89,18 +89,17 @@ bot.onText(/\/referrals/, (msg) => {
   bot.sendMessage(userId, `Share this link with your friends: ${referralLink}`);
 });
 
-server.post("/task", (req, res) => {
-  let { points } = req?.headers;
-
-  // bot.setGameScore()
-});
-
 bot.onText(/\/start (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const referralCode = match[1];
   const newUserId = chatId;
 
   if (referralCode) {
+    if (String(referralCode) === String(newUserId)) {
+      bot.sendMessage(chatId, "You cannot refer yourself.");
+      return;
+    }
+
     bot.sendMessage(
       chatId,
       `Thanks for joining via referral code: ${referralCode}`
@@ -138,17 +137,14 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
           );
           console.log("Referred user added successfully.");
 
-          // adding +20000 points for referrals
           let currentScore = user?.userScore;
           let updatedScore = currentScore + 20000;
           await UserModel.findOneAndUpdate(
-            { userId: currentUser },
+            { userId: referralCode },
             { userScore: updatedScore }
           );
-          ///////////////////////////
         }
       } else {
-        // Create a new user with the referred user data
         const newUser = new UserModel({
           userId: referralCode,
           referred: [referredUserData],
@@ -168,7 +164,6 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     }
   } else {
     bot.sendMessage(chatId, "Welcome to the bot!");
-    console.log("start hogya bro");
   }
 });
 
@@ -183,7 +178,7 @@ bot.onText(/\/start|\/game/, (msg) => {
 
 server.get("/referrallink", (req, res) => {
   let userId = currentUser;
-  let link = `https://t.me/ZurianBot?start=${userId}`;
+  let link = `https://t.me/pomeme_bot?start=${userId}`;
   res.send(link);
 });
 
@@ -199,48 +194,51 @@ server.get("/referrals", async (req, res) => {
 bot.on("callback_query", async function (query) {
   const userId = query?.from?.id;
   currentUser = userId;
-
   let options = {};
 
-  let isAlreadyUser = await UserModel.findOne({ userId: currentUser });
-  if (isAlreadyUser === null) {
-    let data = new UserModel({
-      userId: userId,
-    });
-    await data.save();
-  }
+  try {
+    // Check if the user already exists
+    let user = await UserModel.findOne({ userId });
+    if (!user) {
+      user = new UserModel({
+        userId,
+        userName: query.from.username,
+        isDailyLogged: false,
+        isFollowedTg: false,
+        isFollowedInsta: false,
+        isFollowedTwitter: false,
+        userScore: 0,
+      });
 
-  // Check if the query has a message or inline_message_id and set options accordingly
-  if (query.message) {
-    options = {
-      chat_id: query.message.chat.id,
-      message_id: query.message.message_id,
-    };
-  } else if (query.inline_message_id) {
-    options = {
-      inline_message_id: query.inline_message_id,
-    };
-  } else {
-    console.log("Message ID or Inline Message ID is required.");
-    return;
-  }
+      await user.save();
+    }
 
-  // Now call getGameHighScore with the correct options
-  getGameHighScore(userId, options, {
-    send: (message) => console.log(`Response: ${message}`),
-  });
+    if (query.message) {
+      options = {
+        chat_id: query.message.chat.id,
+        message_id: query.message.message_id,
+      };
+    } else if (query.inline_message_id) {
+      options = {
+        inline_message_id: query.inline_message_id,
+      };
+    } else {
+      console.log("Message ID or Inline Message ID is required.");
+      return;
+    }
 
-  if (query.game_short_name !== gameName) {
-    bot
-      .answerCallbackQuery(query.id, {
-        text: "Sorry, '" + query.game_short_name + "' is not available.",
+    if (query.game_short_name !== gameName) {
+      await bot.answerCallbackQuery(query.id, {
+        text: `Sorry, '${query.game_short_name}' is not available.`,
         show_alert: true,
-      })
-      .catch((err) => {});
-  } else {
-    queries[query.id] = query;
-    const gameurl = `${webURL}?id=${query.id}`;
-    bot.answerCallbackQuery(query.id, { url: gameurl }).catch((err) => {});
+      });
+    } else {
+      queries[query.id] = query;
+      const gameurl = `${webURL}?id=${query.id}`;
+      await bot.answerCallbackQuery(query.id, { url: gameurl });
+    }
+  } catch (err) {
+    console.error("Error handling callback query:", err);
   }
 });
 
@@ -257,48 +255,6 @@ bot.on("inline_query", function (iq) {
 server.get("/", (req, res) => {
   res.send("Homepage");
 });
-
-// server.post("/highscore/:score", function (req, res, next) {
-//   if (!Object.hasOwnProperty.call(queries, req.query.id)) {
-//     return next();
-//   }
-
-//   const realScore = parseInt(req.params.score, 10);
-//   let query = queries[req?.query?.id];
-//   let options;
-
-//   if (query.message) {
-//     options = {
-//       chat_id: query.message.chat.id,
-//       message_id: query.message.message_id,
-//       force: true,
-//     };
-//   } else {
-//     options = {
-//       inline_message_id: query.inline_message_id,
-//       force: true,
-//     };
-//   }
-
-//   bot
-//     .setGameScore(query.from.id, realScore, options)
-//     .then(() => {
-//       getGameHighScore(query.from.id, options, res);
-//     })
-//     .catch((err) => {
-//       if (
-//         err.response.body.description === "Bad Request: BOT_SCORE_NOT_MODIFIED"
-//       ) {
-//         return res
-//           .status(204)
-//           .send("New score is inferior to user's previous one");
-//       } else {
-//         return res
-//           .status(500)
-//           .send("An error occurred while setting the score");
-//       }
-//     });
-// });
 
 server.post("/highscore/:score", async (req, res) => {
   let userId = currentUser;
@@ -344,26 +300,6 @@ server.post("/completetask", async (req, res) => {
 });
 
 server.get("/getHighScore", async function (req, res) {
-  // if (!Object.hasOwnProperty.call(queries, req?.query?.id)) {
-  //   return next();
-  // }
-
-  // let query = queries[req?.query?.id];
-  // let options;
-
-  // if (query.message) {
-  //   options = {
-  //     chat_id: query.message.chat.id,
-  //     message_id: query.message.message_id,
-  //   };
-  // } else {
-  //   options = {
-  //     inline_message_id: query.inline_message_id,
-  //     force: true,
-  //   };
-  // }
-  // getGameHighScore(query.from.id, options, res);
-
   try {
     let score = await UserModel.findOne({ userId: currentUser });
     res.status(200).send({ msg: "score fetched!", score });
@@ -399,9 +335,17 @@ server.get("/checkmember", async (req, res) => {
   }
 });
 
-server.listen(port, async (req, res) => {
-  console.log(currentUserId);
-  await connection;
-  if (connection) console.log("conneted to the database");
-  console.log("server is running");
+server.listen(port, async () => {
+  try {
+    await connection;
+    if (connection) {
+      console.log("Connected to the database");
+    } else {
+      console.error("Failed to connect to the database");
+    }
+  } catch (error) {
+    console.error("Database connection error:", error);
+  }
+
+  console.log(`Server is running on port ${port}`);
 });
