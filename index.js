@@ -8,8 +8,8 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-const webURL = "http://172.20.10.2:3000";
-// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+// const webURL = "http://172.20.10.2:3000";
+const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
 const server = express();
