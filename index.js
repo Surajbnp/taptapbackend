@@ -14,7 +14,6 @@ const channelId = "@teampomeme";
 
 const server = express();
 server.use(cors());
-let currentUserId = [];
 let currentUser;
 server.use(bodyParser.json());
 server.use(cookieParser("surja4"));
@@ -240,12 +239,11 @@ server.get("/user", async (req, res) => {
 
 server.post("/completetask", async (req, res) => {
   const data = req.body;
+  let { id } = req?.query;
   try {
-    let response = await UserModel.findOneAndUpdate(
-      { userId: id },
-      data,
-      { new: true }
-    );
+    let response = await UserModel.findOneAndUpdate({ userId: id }, data, {
+      new: true,
+    });
     if (response) {
       res.send("task completed!");
     } else {
@@ -271,7 +269,7 @@ server.get("/getHighScore", async function (req, res) {
 // checking member or not
 
 server.get("/checkmember", async (req, res) => {
-  const {id} = req?.query;
+  const { id } = req?.query;
 
   if (!id) {
     return res.status(400).send("User ID is required");
