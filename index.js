@@ -8,7 +8,7 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-// const webURL = "http://172.20.10.2:3000";
+// const webURL ="https://c3bb-2409-408a-498-db85-351f-b6db-6550-8bdf.ngrok-free.app";
 const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
@@ -141,10 +141,11 @@ server.get("/referrallink", (req, res) => {
 
 server.get("/referrals", async (req, res) => {
   try {
-    let data = await UserModel.findOne({ userId: req?.headers?.userid });
+    let data = await UserModel.findOne({ userId: req?.headers?.id });
     res.send(data?.referred);
   } catch (err) {
     res.send(err);
+    console.log(err);
   }
 });
 
@@ -154,7 +155,6 @@ bot.on("callback_query", async function (query) {
   let options = {};
 
   try {
-    // Check if the user already exists
     let user = await UserModel.findOne({ userId });
     if (!user) {
       user = new UserModel({
@@ -242,7 +242,7 @@ server.post("/completetask", async (req, res) => {
   const data = req.body;
   try {
     let response = await UserModel.findOneAndUpdate(
-      { userId: currentUser },
+      { userId: id },
       data,
       { new: true }
     );
@@ -271,14 +271,14 @@ server.get("/getHighScore", async function (req, res) {
 // checking member or not
 
 server.get("/checkmember", async (req, res) => {
-  const userId = currentUser;
+  const {id} = req?.query;
 
-  if (!userId) {
+  if (!id) {
     return res.status(400).send("User ID is required");
   }
 
   try {
-    const chatMember = await bot.getChatMember(channelId, userId);
+    const chatMember = await bot.getChatMember(channelId, id);
 
     if (
       chatMember.status === "member" ||
