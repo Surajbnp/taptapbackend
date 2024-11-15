@@ -8,8 +8,9 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-// const webURL ="https://c3bb-2409-408a-498-db85-351f-b6db-6550-8bdf.ngrok-free.app";
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+const webURL =
+  "https://59de-2409-408a-498-db85-29fd-1d27-fc12-7b6e.ngrok-free.app";
+// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
 const server = express();
@@ -45,81 +46,122 @@ bot.onText(/\/referrals/, (msg) => {
   bot.sendMessage(userId, `Share this link with your friends: ${referralLink}`);
 });
 
-bot.onText(/\/start (.+)/, async (msg, match) => {
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    if (msg.reply_to_message?.message_id) {
+      await bot.editMessageReplyMarkup(
+        { inline_keyboard: [] },
+        {
+          chat_id: chatId,
+          message_id: msg.reply_to_message.message_id,
+        }
+      );
+    }
+
+    await bot.sendPhoto(chatId, "https://i.pinimg.com/564x/27/ea/74/27ea74b396d558d33c4ed48592d50ef8.jpg", {
+      caption: "🎮 **Pomeme Tap Game**\n\n💡 Tap to test your speed and set new high scores!",
+      parse_mode: "Markdown",
+    });
+
+    await bot.sendMessage(chatId, "Click the button below to start the game:", {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Launch Game 🕹️",
+              web_app: {
+                url: webURL,
+              },
+            },
+          ],
+        ],
+      },
+    });
+  } catch (error) {
+    console.error("Error handling message:", error);
+  }
+});
+
+bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
   const chatId = msg.chat.id;
   const referralCode = match[1];
-  const newUserId = chatId;
+  const newUserId = String(chatId);
 
-  if (referralCode) {
-    if (String(referralCode) === String(newUserId)) {
-      bot.sendMessage(chatId, "You cannot refer yourself.");
-      return;
-    }
+  if (referralCode && referralCode === newUserId) {
+    bot.sendMessage(chatId, "You cannot refer yourself.");
+    return;
+  }
 
-    bot.sendMessage(
-      chatId,
-      `Thanks for joining via referral code: ${referralCode}`
-    );
+  try {
+    let user = await UserModel.findOne({ userId: newUserId });
 
-    try {
+    if (!user) {
       const chatMember = await bot.getChatMember(chatId, newUserId);
-      const username = chatMember.user.username;
-      const firstName = chatMember.user.first_name;
-      const lastName = chatMember.user.last_name;
+      const {
+        username,
+        first_name: firstName,
+        last_name: lastName,
+      } = chatMember.user;
 
-      const referredUserData = {
+      user = new UserModel({
+        userId: newUserId,
         name: firstName,
         userName: username,
-        userId: newUserId,
-      };
+        maxEnergyVal: 500,
+        recoveryVal: 1,
+        isDailyLogged: false,
+        tapValue: 1,
+        isFollowedTg: false,
+        isFollowedInsta: false,
+        isFollowedTwitter: false,
+      });
 
-      console.log(
-        `Username: ${username}, First Name: ${firstName}, Last Name: ${lastName}`
-      );
+      await user.save();
+      bot.sendMessage(chatId, "Welcome to the bot!");
+    } else {
+      bot.sendMessage(chatId, "Welcome back to the bot!");
+    }
 
-      const user = await UserModel.findOne({ userId: referralCode });
+    if (referralCode) {
+      const referrer = await UserModel.findOne({ userId: referralCode });
 
-      if (user) {
-        const isReferred = user.referred.some(
-          (referral) => Number(referral.userId) === Number(newUserId)
+      if (referrer) {
+        const isAlreadyReferred = referrer.referred.some(
+          (referral) => String(referral.userId) === newUserId
         );
 
-        if (isReferred) {
-          console.log("This referred user data already exists.");
-        } else {
+        if (!isAlreadyReferred) {
+          const referredUserData = {
+            name: user.name || firstName,
+            userName: user.userName || username,
+            userId: newUserId,
+          };
+
           await UserModel.updateOne(
             { userId: referralCode },
-            { $push: { referred: referredUserData } }
+            {
+              $push: { referred: referredUserData },
+              $inc: { userScore: 20000 },
+            }
+          );
+
+          bot.sendMessage(
+            chatId,
+            `Thanks for joining via referral code: ${referralCode}`
           );
           console.log("Referred user added successfully.");
-
-          let currentScore = user?.userScore;
-          let updatedScore = currentScore + 20000;
-          await UserModel.findOneAndUpdate(
-            { userId: referralCode },
-            { userScore: updatedScore }
-          );
+        } else {
+          console.log("This referred user data already exists.");
         }
       } else {
-        const newUser = new UserModel({
-          userId: referralCode,
-          referred: [referredUserData],
-          maxEnergyVal: 500,
-          recoveryVal: 1,
-          isDailyLogged: false,
-          tapValue: 1,
-          isFollowedTg: false,
-          isFollowedInsta: false,
-          isFollowedTwitter: false,
-        });
-        await newUser.save();
-        console.log("New user created and referred data added.");
+        console.log("Referrer does not exist.");
       }
-    } catch (error) {
-      console.error("Error handling referred user:", error);
     }
-  } else {
-    bot.sendMessage(chatId, "Welcome to the bot!");
+  } catch (error) {
+    console.error("Error handling referred user:", error);
+    bot.sendMessage(chatId, "An error occurred. Please try again later.");
   }
 });
 
@@ -127,14 +169,13 @@ bot.on("polling_error", (error) => {
   console.log("Polling error:", error);
 });
 
-bot.onText(/\/start|\/game/, (msg) => {
-  bot.sendGame(msg.from.id, gameName);
-  console.log("inside bot", msg.userId);
-});
+// bot.onText(/\/start|\/game/, (msg) => {
+//   bot.sendGame(msg.from.id, gameName);
+// });
 
 server.get("/referrallink", (req, res) => {
-  let userId = currentUser;
-  let link = `https://t.me/pomeme_bot?start=${userId}`;
+  let {id} = req?.query;
+  let link = `https://t.me/pomeme_bot?start=${id}`;
   res.send(link);
 });
 
@@ -148,55 +189,55 @@ server.get("/referrals", async (req, res) => {
   }
 });
 
-bot.on("callback_query", async function (query) {
-  const userId = query?.from?.id;
-  currentUser = userId;
-  let options = {};
+// bot.on("callback_query", async function (query) {
+//   const userId = query?.from?.id;
+//   currentUser = userId;
+//   let options = {};
 
-  try {
-    let user = await UserModel.findOne({ userId });
-    if (!user) {
-      user = new UserModel({
-        userId,
-        userName: query.from.username,
-        isDailyLogged: false,
-        isFollowedTg: false,
-        isFollowedInsta: false,
-        isFollowedTwitter: false,
-        userScore: 0,
-      });
+//   try {
+//     let user = await UserModel.findOne({ userId });
+//     if (!user) {
+//       user = new UserModel({
+//         userId,
+//         userName: query.from.username,
+//         isDailyLogged: false,
+//         isFollowedTg: false,
+//         isFollowedInsta: false,
+//         isFollowedTwitter: false,
+//         userScore: 0,
+//       });
 
-      await user.save();
-    }
+//       await user.save();
+//     }
 
-    if (query.message) {
-      options = {
-        chat_id: query.message.chat.id,
-        message_id: query.message.message_id,
-      };
-    } else if (query.inline_message_id) {
-      options = {
-        inline_message_id: query.inline_message_id,
-      };
-    } else {
-      console.log("Message ID or Inline Message ID is required.");
-      return;
-    }
+//     if (query.message) {
+//       options = {
+//         chat_id: query.message.chat.id,
+//         message_id: query.message.message_id,
+//       };
+//     } else if (query.inline_message_id) {
+//       options = {
+//         inline_message_id: query.inline_message_id,
+//       };
+//     } else {
+//       console.log("Message ID or Inline Message ID is required.");
+//       return;
+//     }
 
-    if (query.game_short_name !== gameName) {
-      await bot.answerCallbackQuery(query.id, {
-        text: `Sorry, '${query.game_short_name}' is not available.`,
-        show_alert: true,
-      });
-    } else {
-      queries[query.id] = query;
-      const gameurl = `${webURL}?id=${query.id}`;
-      await bot.answerCallbackQuery(query.id, { url: gameurl });
-    }
-  } catch (err) {
-    console.error("Error handling callback query:", err);
-  }
-});
+//     if (query.game_short_name !== gameName) {
+//       await bot.answerCallbackQuery(query.id, {
+//         text: `Sorry, '${query.game_short_name}' is not available.`,
+//         show_alert: true,
+//       });
+//     } else {
+//       queries[query.id] = query;
+//       const gameurl = `${webURL}?id=${query.id}`;
+//       await bot.answerCallbackQuery(query.id);
+//     }
+//   } catch (err) {
+//     console.error("Error handling callback query:", err);
+//   }
+// });
 
 bot.on("inline_query", function (iq) {
   bot
@@ -206,18 +247,16 @@ bot.on("inline_query", function (iq) {
     .catch((err) => {});
 });
 
-// server.use(express.static(path.join(__dirname, "public")));
-
 server.get("/", (req, res) => {
   res.send("Homepage");
 });
 
 server.post("/highscore/:score", async (req, res) => {
-  let userId = currentUser;
+  let { id } = req?.query;
   const realScore = parseInt(req.params.score, 10);
   try {
     let data = await UserModel.findOneAndUpdate(
-      { userId: userId },
+      { userId: id },
       { userScore: realScore }
     );
 
@@ -257,7 +296,7 @@ server.post("/completetask", async (req, res) => {
 
 server.get("/getHighScore", async function (req, res) {
   let { id } = req?.query;
-  console.log(req.query, "from id");
+  console.log("called");
   try {
     let score = await UserModel.findOne({ userId: id });
     res.status(200).send({ msg: "score fetched!", score });
@@ -265,8 +304,6 @@ server.get("/getHighScore", async function (req, res) {
     res.status(400).send({ msg: "something went wrong!", error: err });
   }
 });
-
-// checking member or not
 
 server.get("/checkmember", async (req, res) => {
   const { id } = req?.query;
@@ -305,5 +342,5 @@ server.listen(port, async () => {
     console.error("Database connection error:", error);
   }
 
-  console.log(`Server is running on port ${port}`);
+  console.log(`Bot is running on port ${port}`);
 });
