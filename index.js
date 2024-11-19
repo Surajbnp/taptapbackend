@@ -59,10 +59,15 @@ bot.on("message", async (msg) => {
       );
     }
 
-    await bot.sendPhoto(chatId, "https://i.pinimg.com/564x/27/ea/74/27ea74b396d558d33c4ed48592d50ef8.jpg", {
-      caption: "🎮 **Pomeme Tap Game**\n\n💡 Tap to test your speed and set new high scores!",
-      parse_mode: "Markdown",
-    });
+    await bot.sendPhoto(
+      chatId,
+      "https://i.pinimg.com/564x/27/ea/74/27ea74b396d558d33c4ed48592d50ef8.jpg",
+      {
+        caption:
+          "🎮 **Pomeme Tap Game**\n\n💡 Tap to test your speed and set new high scores!",
+        parse_mode: "Markdown",
+      }
+    );
 
     await bot.sendMessage(chatId, "Click the button below to start the game:", {
       reply_markup: {
@@ -73,6 +78,16 @@ bot.on("message", async (msg) => {
               web_app: {
                 url: webURL,
               },
+            },
+          ],
+          [
+            {
+              text: "Follow Community 📡",
+              url: "https://t.me/pomeme_sol/1",
+            },
+            {
+              text: "Follow X 🚀",
+              url: "https://x.com/Zuraverse",
             },
           ],
         ],
@@ -173,7 +188,7 @@ bot.on("polling_error", (error) => {
 // });
 
 server.get("/referrallink", (req, res) => {
-  let {id} = req?.query;
+  let { id } = req?.query;
   let link = `https://t.me/pomeme_bot?start=${id}`;
   res.send(link);
 });
