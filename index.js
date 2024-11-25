@@ -8,7 +8,8 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-// const webURL ="https://59de-2409-408a-498-db85-29fd-1d27-fc12-7b6e.ngrok-free.app";
+// const webURL =
+//   "https://d16e-2409-40e5-10-a378-d0ee-658f-e832-9f8e.ngrok-free.app";
 const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
@@ -183,10 +184,6 @@ bot.on("polling_error", (error) => {
   console.log("Polling error:", error);
 });
 
-// bot.onText(/\/start|\/game/, (msg) => {
-//   bot.sendGame(msg.from.id, gameName);
-// });
-
 server.get("/referrallink", (req, res) => {
   let { id } = req?.query;
   let link = `https://t.me/pomeme_bot?start=${id}`;
@@ -267,16 +264,18 @@ server.get("/", (req, res) => {
 
 server.post("/highscore/:score", async (req, res) => {
   let { id } = req?.query;
-  const realScore = parseInt(req.params.score, 10);
+  const incrementScore = parseInt(req.params.score, 10);
+
   try {
     let data = await UserModel.findOneAndUpdate(
       { userId: id },
-      { userScore: realScore }
+      { $inc: { userScore: incrementScore } },
+      { new: true }
     );
 
-    res.status(200).send({ msg: "score updated!", data: data });
+    res.status(200).send({ msg: "Score updated!", data: data });
   } catch (err) {
-    res.status(400).send({ msg: "something went wrong!", err });
+    res.status(400).send({ msg: "Something went wrong!", err });
   }
 });
 
