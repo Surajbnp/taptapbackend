@@ -291,13 +291,21 @@ server.get("/user", async (req, res) => {
 
 server.post("/completetask", async (req, res) => {
   const data = req.body;
-  let { id } = req?.query;
+  const { id } = req.query;
+  const { taskKey, points } = data;
+
   try {
-    let response = await UserModel.findOneAndUpdate({ userId: id }, data, {
-      new: true,
-    });
+    const response = await UserModel.findOneAndUpdate(
+      { userId: id },
+      {
+        $inc: { highScore: points },
+        $set: { [taskKey]: true },
+      },
+      { new: true }
+    );
+
     if (response) {
-      res.send("task completed!");
+      res.status(200).send({ message: "Task completed!", user: response });
     } else {
       res.status(404).send("User not found!");
     }
