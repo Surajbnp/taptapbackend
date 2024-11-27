@@ -343,11 +343,13 @@ server.get("/checkmember", async (req, res) => {
     ) {
       res.status(200).send(chatMember);
     } else {
-      res.status(403).send("User has not joined the channel");
+      res.status(403).send({ msg: "User has not joined the channel" });
     }
   } catch (error) {
     console.error("Error checking channel join status:", error);
-    res.status(500).send("An error occurred while checking channel status");
+    res
+      .status(500)
+      .send({ msg: "An error occurred while checking channel status" });
   }
 });
 
