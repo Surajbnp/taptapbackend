@@ -341,15 +341,21 @@ server.get("/checkmember", async (req, res) => {
       chatMember.status === "administrator" ||
       chatMember.status === "creator"
     ) {
-      res.status(200).send(chatMember);
+      res
+        .status(200)
+        .send({ msg: "member verified!", status: 200, data: chatMember });
     } else {
-      res.status(403).send({ msg: "User has not joined the channel" });
+      res
+        .status(403)
+        .send({ msg: "User has not joined the channel", status: 403 });
     }
   } catch (error) {
-    console.error("Error checking channel join status:", error);
     res
       .status(500)
-      .send({ msg: "An error occurred while checking channel status" });
+      .send({
+        msg: "An error occurred while checking channel status",
+        status: 500,
+      });
   }
 });
 
