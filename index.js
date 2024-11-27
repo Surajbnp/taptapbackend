@@ -298,7 +298,7 @@ server.post("/completetask", async (req, res) => {
     const response = await UserModel.findOneAndUpdate(
       { userId: id },
       {
-        $inc: { highScore: points },
+        $inc: { userScore: points },
         $set: { [taskKey]: true },
       },
       { new: true }
