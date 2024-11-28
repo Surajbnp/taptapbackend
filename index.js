@@ -315,6 +315,11 @@ server.post("/completetask", async (req, res) => {
   }
 });
 
+server.get("/fetchdate", async function (req, res) {
+  let date = Date.now();
+  res.status(200).send({ msg: "date fetched!", date: date });
+});
+
 server.get("/getHighScore", async function (req, res) {
   let { id } = req?.query;
   console.log("called");
@@ -350,12 +355,10 @@ server.get("/checkmember", async (req, res) => {
         .send({ msg: "User has not joined the channel", status: 403 });
     }
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        msg: "An error occurred while checking channel status",
-        status: 500,
-      });
+    res.status(500).send({
+      msg: "An error occurred while checking channel status",
+      status: 500,
+    });
   }
 });
 
