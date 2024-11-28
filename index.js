@@ -262,6 +262,31 @@ server.get("/", (req, res) => {
   res.send("Homepage");
 });
 
+server.get("/fetchage", (req, res) => {
+  let { id } = req?.query;
+  bot.start((ctx) => {
+    const userId = id;
+    const accountDate = new Date(userId / 4194304 + 1420070400000);
+    const now = new Date();
+    const accountAgeInDays = Math.floor(
+      (now - accountDate) / (1000 * 60 * 60 * 24)
+    );
+
+    ctx.reply(
+      `Hello ${
+        ctx.from.first_name
+      }!\nYour account was created on: ${accountDate.toDateString()}.\nThat's approximately ${accountAgeInDays} days ago!`
+    );
+    res
+      .status(200)
+      .send({
+        msg: "fetched",
+        data: accountAgeInDays,
+        points: accountAgeInDays * 10,
+      });
+  });
+});
+
 server.post("/highscore/:score", async (req, res) => {
   let { id } = req?.query;
   const incrementScore = parseInt(req.params.score, 10);
@@ -320,7 +345,6 @@ server.get("/fetchdate", async function (req, res) {
   const formattedDate = now.toISOString().replace("T", "-").slice(0, 19);
   res.status(200).send({ msg: "date fetched!", date: formattedDate });
 });
-
 
 server.get("/getHighScore", async function (req, res) {
   let { id } = req?.query;
