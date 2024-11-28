@@ -316,9 +316,11 @@ server.post("/completetask", async (req, res) => {
 });
 
 server.get("/fetchdate", async function (req, res) {
-  let date = Date.now();
-  res.status(200).send({ msg: "date fetched!", date: date });
+  const now = new Date();
+  const formattedDate = now.toISOString().replace("T", "-").slice(0, 19);
+  res.status(200).send({ msg: "date fetched!", date: formattedDate });
 });
+
 
 server.get("/getHighScore", async function (req, res) {
   let { id } = req?.query;
