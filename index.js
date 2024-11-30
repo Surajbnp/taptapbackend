@@ -8,9 +8,8 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-// const webURL =
-//   "https://d16e-2409-40e5-10-a378-d0ee-658f-e832-9f8e.ngrok-free.app";
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+const webURL = "http://192.168.1.3:3000";
+// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
 const server = express();
@@ -200,56 +199,6 @@ server.get("/referrals", async (req, res) => {
   }
 });
 
-// bot.on("callback_query", async function (query) {
-//   const userId = query?.from?.id;
-//   currentUser = userId;
-//   let options = {};
-
-//   try {
-//     let user = await UserModel.findOne({ userId });
-//     if (!user) {
-//       user = new UserModel({
-//         userId,
-//         userName: query.from.username,
-//         isDailyLogged: false,
-//         isFollowedTg: false,
-//         isFollowedInsta: false,
-//         isFollowedTwitter: false,
-//         userScore: 0,
-//       });
-
-//       await user.save();
-//     }
-
-//     if (query.message) {
-//       options = {
-//         chat_id: query.message.chat.id,
-//         message_id: query.message.message_id,
-//       };
-//     } else if (query.inline_message_id) {
-//       options = {
-//         inline_message_id: query.inline_message_id,
-//       };
-//     } else {
-//       console.log("Message ID or Inline Message ID is required.");
-//       return;
-//     }
-
-//     if (query.game_short_name !== gameName) {
-//       await bot.answerCallbackQuery(query.id, {
-//         text: `Sorry, '${query.game_short_name}' is not available.`,
-//         show_alert: true,
-//       });
-//     } else {
-//       queries[query.id] = query;
-//       const gameurl = `${webURL}?id=${query.id}`;
-//       await bot.answerCallbackQuery(query.id);
-//     }
-//   } catch (err) {
-//     console.error("Error handling callback query:", err);
-//   }
-// });
-
 bot.on("inline_query", function (iq) {
   bot
     .answerInlineQuery(iq.id, [
@@ -262,29 +211,14 @@ server.get("/", (req, res) => {
   res.send("Homepage");
 });
 
-server.get("/fetchage", (req, res) => {
+server.post("/create", async (req, res) => {
   let { id } = req?.query;
-  bot.start((ctx) => {
-    const userId = id;
-    const accountDate = new Date(userId / 4194304 + 1420070400000);
-    const now = new Date();
-    const accountAgeInDays = Math.floor(
-      (now - accountDate) / (1000 * 60 * 60 * 24)
-    );
-
-    ctx.reply(
-      `Hello ${
-        ctx.from.first_name
-      }!\nYour account was created on: ${accountDate.toDateString()}.\nThat's approximately ${accountAgeInDays} days ago!`
-    );
-    res
-      .status(200)
-      .send({
-        msg: "fetched",
-        data: accountAgeInDays,
-        points: accountAgeInDays * 10,
-      });
-  });
+  try {
+    let newUser = await UserModel.create({ userId: id });
+    res.status(200).send({ msg: "new user created!", data: newUser });
+  } catch (err) {
+    res.status(400).send({ msg: "something went wrong!", err: err });
+  }
 });
 
 server.post("/highscore/:score", async (req, res) => {
@@ -308,9 +242,12 @@ server.get("/user", async (req, res) => {
   let { id } = req?.query;
   try {
     let data = await UserModel.findOne({ userId: id });
-    res.send(data);
-  } catch {
-    res.send("something went wrong");
+    if (!data) {
+      return res.status(404).send(null);
+    }
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(500).send("Something went wrong");
   }
 });
 

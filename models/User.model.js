@@ -7,16 +7,16 @@ const referredUserSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  userId: { type: Number, required: true }, 
+  userId: { type: Number, required: true, unique: true },
   referred: { type: [referredUserSchema], default: [] },
-  maxEnergyVal: { type: Number, default: 500 },  
+  maxEnergyVal: { type: Number, default: 500 },
   recoveryVal: { type: Number, default: 1 },
   isDailyLogged: { type: Boolean, default: false },
   tapValue: { type: Number, default: 1 },
   isFollowedTg: { type: Boolean, default: false },
   isFollowedInsta: { type: Boolean, default: false },
   isFollowedTwitter: { type: Boolean, default: false },
-  userScore : {type : Number, default : 0}
+  userScore: { type: Number, default: 0 },
 });
 
 const UserModel = mongoose.model("User", userSchema);
