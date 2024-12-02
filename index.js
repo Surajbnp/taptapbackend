@@ -277,6 +277,31 @@ server.post("/completetask", async (req, res) => {
   }
 });
 
+server.post("/completeupgrade", async (req, res) => {
+  const data = req.body;
+  const { id } = req.query;
+  const { taskKey, points, incBy } = data;
+
+  try {
+    const response = await UserModel.findOneAndUpdate(
+      { userId: id },
+      {
+       $inc: { userScore: -points, [taskKey]: incBy }
+      },
+      { new: true }
+    );
+
+    if (response) {
+      res.status(200).send({ message: "Upgrade success!", user: response });
+    } else {
+      res.status(404).send("User not found!");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Something went wrong!");
+  }
+});
+
 server.get("/fetchdate", async function (req, res) {
   const now = new Date();
   const formattedDate = now.toISOString().replace("T", "-").slice(0, 19);
