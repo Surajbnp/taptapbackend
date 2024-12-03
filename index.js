@@ -113,27 +113,15 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
 
     if (!user) {
       const chatMember = await bot.getChatMember(chatId, newUserId);
-      const {
-        username,
-        first_name: firstName,
-        last_name: lastName,
-      } = chatMember.user;
+      const { username, first_name: firstName } = chatMember.user;
 
-      user = new UserModel({
-        userId: newUserId,
-        name: firstName,
+      let newUser = await UserModel.create({
+        userId: id,
+        name: first_name,
         userName: username,
-        maxEnergyVal: 500,
-        recoveryVal: 1,
-        isDailyLogged: false,
-        tapValue: 1,
-        isFollowedTg: false,
-        isFollowedInsta: false,
-        isFollowedTwitter: false,
       });
 
-      await user.save();
-      bot.sendMessage(chatId, "Welcome to the bot!");
+      bot.sendMessage(chatId, "Welcome to the bot!", newUser);
     } else {
       bot.sendMessage(chatId, "Welcome back to the bot!");
     }
@@ -286,7 +274,7 @@ server.post("/completeupgrade", async (req, res) => {
     const response = await UserModel.findOneAndUpdate(
       { userId: id },
       {
-       $inc: { userScore: -points, [taskKey]: incBy }
+        $inc: { userScore: -points, [taskKey]: incBy },
       },
       { new: true }
     );
