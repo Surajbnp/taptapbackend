@@ -117,7 +117,7 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
 
       let newUser = await UserModel.create({
         userId: id,
-        name: first_name,
+        name: firstName,
         userName: username,
       });
 
