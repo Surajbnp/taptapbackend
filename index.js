@@ -8,8 +8,8 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-// const webURL = "http://192.168.1.3:3000";
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+const webURL = "https://1bac-223-185-62-231.ngrok-free.app";
+// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
 const server = express();
@@ -102,6 +102,7 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
   const chatId = msg.chat.id;
   const referralCode = match[1];
   const newUserId = String(chatId);
+  const chatMember = await bot.getChatMember(chatId, newUserId);
 
   if (referralCode && referralCode === newUserId) {
     bot.sendMessage(chatId, "You cannot refer yourself.");
@@ -112,16 +113,25 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
     let user = await UserModel.findOne({ userId: newUserId });
 
     if (!user) {
-      const chatMember = await bot.getChatMember(chatId, newUserId);
-      const { username, first_name: firstName } = chatMember.user;
+      try {
+      } catch (err) {
+        console.log("Error fetching chat member:", err);
+        bot.sendMessage(chatId, "Could not fetch your details.");
+        return;
+      }
 
-      let newUser = await UserModel.create({
-        userId: id,
-        name: firstName,
-        userName: username,
-      });
-
-      bot.sendMessage(chatId, "Welcome to the bot!", newUser);
+      if (chatMember && chatMember.user) {
+        user = await UserModel.create({
+          userId: chatMember?.user?.id,
+        });
+        bot.sendMessage(chatId, "Welcome to the bot!");
+      } else {
+        bot.sendMessage(
+          chatId,
+          "Could not retrieve your profile. Please try again."
+        );
+        return;
+      }
     } else {
       bot.sendMessage(chatId, "Welcome back to the bot!");
     }
@@ -136,8 +146,8 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
 
         if (!isAlreadyReferred) {
           const referredUserData = {
-            name: user.name || firstName,
-            userName: user.userName || username,
+            name: chatMember?.user?.first_name,
+            userName: chatMember?.user?.username,
             userId: newUserId,
           };
 
