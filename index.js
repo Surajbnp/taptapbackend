@@ -8,8 +8,8 @@ const connection = require("./database/server.js");
 const cors = require("cors");
 
 const gameName = "pomemetap";
-// const webURL = "https://1bac-223-185-62-231.ngrok-free.app";
-const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
+const webURL = "http://192.168.1.3:3000";
+// const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
 
 const server = express();
@@ -135,7 +135,6 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
     } else {
       bot.sendMessage(chatId, "Welcome back to the bot!");
     }
-
     if (referralCode) {
       const referrer = await UserModel.findOne({ userId: referralCode });
 
@@ -144,7 +143,7 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
           (referral) => String(referral.userId) === newUserId
         );
 
-        if (!isAlreadyReferred) {
+        if (!isAlreadyReferred && !user) {
           const referredUserData = {
             name: chatMember?.user?.first_name,
             userName: chatMember?.user?.username,
@@ -243,8 +242,21 @@ server.get("/user", async (req, res) => {
     if (!data) {
       return res.status(404).send(null);
     }
-    res.status(200).send(data);
+    return res.status(200).send(data);
   } catch (error) {
+    res.status(500).send("Something went wrong");
+  }
+});
+
+server.get("/leaderboard", async (req, res) => {
+  try {
+    let data = await UserModel.find().sort({ userScore: -1 });
+    if (!data || data.length === 0) {
+      return res.status(404).send([]);
+    }
+    return res.status(200).send(data);
+  } catch (error) {
+    console.error(error);
     res.status(500).send("Something went wrong");
   }
 });
@@ -308,7 +320,6 @@ server.get("/fetchdate", async function (req, res) {
 
 server.get("/getHighScore", async function (req, res) {
   let { id } = req?.query;
-  console.log("called");
   try {
     let score = await UserModel.findOne({ userId: id });
     res.status(200).send({ msg: "score fetched!", score });
