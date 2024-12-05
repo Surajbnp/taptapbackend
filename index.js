@@ -134,6 +134,7 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
       }
     } else {
       bot.sendMessage(chatId, "Welcome back to the bot!");
+      return;
     }
     if (referralCode) {
       const referrer = await UserModel.findOne({ userId: referralCode });
