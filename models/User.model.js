@@ -7,6 +7,7 @@ const referredUserSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
+  userName : {type : String},
   userId: { type: Number, required: true, unique: true },
   referred: { type: [referredUserSchema], default: [] },
   maxEnergyVal: { type: Number, default: 500 },
