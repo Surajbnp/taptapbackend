@@ -125,6 +125,43 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
           userId: chatMember?.user?.id,
           userName: chatMember?.user?.first_name || chatMember?.user?.username,
         });
+
+        if (referralCode) {
+          const referrer = await UserModel.findOne({ userId: referralCode });
+
+          if (referrer) {
+            const isAlreadyReferred = referrer.referred.some(
+              (referral) => String(referral.userId) === newUserId
+            );
+
+            if (!isAlreadyReferred) {
+              const referredUserData = {
+                name: chatMember?.user?.first_name,
+                userName: chatMember?.user?.username,
+                userId: newUserId,
+              };
+
+              await UserModel.updateOne(
+                { userId: referralCode },
+                {
+                  $push: { referred: referredUserData },
+                  $inc: { userScore: 20000 },
+                }
+              );
+
+              bot.sendMessage(
+                chatId,
+                `Thanks for joining via referral code: ${referralCode}`
+              );
+              console.log("Referred user added successfully.");
+            } else {
+              console.log("This referred user data already exists.");
+            }
+          } else {
+            console.log("Referrer does not exist.");
+          }
+        }
+
         bot.sendMessage(chatId, "Welcome to the bot!");
       } else {
         bot.sendMessage(
@@ -134,42 +171,7 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
         return;
       }
     } else {
-      if (referralCode) {
-        const referrer = await UserModel.findOne({ userId: referralCode });
-
-        if (referrer) {
-          const isAlreadyReferred = referrer.referred.some(
-            (referral) => String(referral.userId) === newUserId
-          );
-
-          if (!isAlreadyReferred && !user) {
-            const referredUserData = {
-              name: chatMember?.user?.first_name,
-              userName: chatMember?.user?.username,
-              userId: newUserId,
-            };
-
-            await UserModel.updateOne(
-              { userId: referralCode },
-              {
-                $push: { referred: referredUserData },
-                $inc: { userScore: 20000 },
-              }
-            );
-
-            bot.sendMessage(
-              chatId,
-              `Thanks for joining via referral code: ${referralCode}`
-            );
-            console.log("Referred user added successfully.");
-          } else {
-            console.log("This referred user data already exists.");
-            bot.sendMessage(chatId, "Welcome back to the bot!");
-          }
-        } else {
-          console.log("Referrer does not exist.");
-        }
-      }
+      bot.sendMessage(chatId, "Welcome back to the bot!");
     }
   } catch (error) {
     console.error("Error handling referred user:", error);
