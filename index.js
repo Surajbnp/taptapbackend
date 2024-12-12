@@ -331,7 +331,10 @@ server.get("/leaderboard", async (req, res) => {
       data.map(async (user) => {
         try {
           const url = `/profilepic/${user.userId}`;
-          return { ...user._doc, profilepic: url || null };
+          return {
+            ...user._doc,
+            profilepic: `https://www.gamefistudios.xyz/${url}` || null,
+          };
         } catch (error) {
           console.error(
             `Error fetching profile picture for userId: ${user.userId}`,
