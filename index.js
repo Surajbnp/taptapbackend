@@ -6,8 +6,7 @@ const TelegramBot = require("node-telegram-bot-api");
 const { UserModel } = require("./models/User.model");
 const connection = require("./database/server.js");
 const cors = require("cors");
-const axios = require('axios');
-
+const axios = require("axios");
 
 const gameName = "pomemetap";
 // const webURL = "http://192.168.1.3:3000";
@@ -300,15 +299,51 @@ server.get("/profilepic/:userId", async (req, res) => {
   }
 });
 
+// server.get("/leaderboard", async (req, res) => {
+//   try {
+//     let data = await UserModel.find().sort({ userScore: -1 });
+//     const imageUrl = await fetchUserProfilePic(userId);
+//     if (imageUrl) {
+//       const imageResponse = await axios.get(imageUrl, {
+//         responseType: "arraybuffer",
+//       });
+//       console.log(imageResponse.data);
+//     } else {
+//       console.log("No profile picture found.");
+//     }
+//     if (!data || data.length === 0) {
+//       return res.status(404).send([]);
+//     }
+//     return res.status(200).send(data);
+//   } catch (error) {
+//     console.error('Error fetching image:', error.message);
+//     res.status(500).send("Something went wrong");
+//   }
+// });
+
 server.get("/leaderboard", async (req, res) => {
   try {
     let data = await UserModel.find().sort({ userScore: -1 });
     if (!data || data.length === 0) {
       return res.status(404).send([]);
     }
-    return res.status(200).send(data);
+    const leaderboardWithPics = await Promise.all(
+      data.map(async (user) => {
+        try {
+          const url = `/profilepic/${user.userId}`;
+          return { ...user._doc, profilepic: url || null };
+        } catch (error) {
+          console.error(
+            `Error fetching profile picture for userId: ${user.userId}`,
+            error.message
+          );
+          return { ...user._doc, profilepic: null };
+        }
+      })
+    );
+    return res.status(200).send(leaderboardWithPics);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching leaderboard:", error.message);
     res.status(500).send("Something went wrong");
   }
 });
