@@ -6,6 +6,8 @@ const TelegramBot = require("node-telegram-bot-api");
 const { UserModel } = require("./models/User.model");
 const connection = require("./database/server.js");
 const cors = require("cors");
+const axios = require('axios');
+
 
 const gameName = "pomemetap";
 // const webURL = "http://192.168.1.3:3000";
@@ -20,7 +22,7 @@ server.use(cors());
 server.use(bodyParser.json());
 server.use(cookieParser("surja4"));
 
-const bot = new TelegramBot(BOT_TOKEN, {
+const bot = new TelegramBot("7626606090:AAHvWwlTY_T7OMKY4heIGn2eRG9zKwK9-BQ", {
   polling: {
     interval: 1000,
     autoStart: true,
@@ -279,20 +281,22 @@ server.get("/user", async (req, res) => {
   }
 });
 
-server.get('/profilepic/:userId', async (req, res) => {
+server.get("/profilepic/:userId", async (req, res) => {
   const userId = req.params.userId;
   try {
     const imageUrl = await fetchUserProfilePic(userId);
     if (imageUrl) {
-      const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-      res.set('Content-Type', 'image/jpeg');
+      const imageResponse = await axios.get(imageUrl, {
+        responseType: "arraybuffer",
+      });
+      res.set("Content-Type", "image/jpeg");
       res.send(imageResponse.data);
     } else {
-      res.status(404).send('No profile picture found.');
+      res.status(404).send("No profile picture found.");
     }
   } catch (error) {
-    console.error('Error fetching image:', error.message);
-    res.status(500).send('Internal Server Error');
+    console.error("Error fetching image:", error.message);
+    res.status(500).send("Internal Server Error");
   }
 });
 
