@@ -11,14 +11,16 @@ const gameName = "pomemetap";
 // const webURL = "http://192.168.1.3:3000";
 const webURL = `https://test.d1zpxmmc54858w.amplifyapp.com`;
 const channelId = "@teampomeme";
+const BOT_TOKEN = "7626606090:AAHvWwlTY_T7OMKY4heIGn2eRG9zKwK9-BQ";
+const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+const TELEGRAM_FILE_API = `https://api.telegram.org/file/bot${BOT_TOKEN}`;
 
 const server = express();
 server.use(cors());
-let currentUser;
 server.use(bodyParser.json());
 server.use(cookieParser("surja4"));
 
-const bot = new TelegramBot("7626606090:AAHvWwlTY_T7OMKY4heIGn2eRG9zKwK9-BQ", {
+const bot = new TelegramBot(BOT_TOKEN, {
   polling: {
     interval: 1000,
     autoStart: true,
@@ -183,6 +185,32 @@ bot.on("polling_error", (error) => {
   console.log("Polling error:", error);
 });
 
+// fetchiing user profile
+async function fetchUserProfilePic(userId) {
+  try {
+    const photosRes = await axios.post(`${TELEGRAM_API}/getUserProfilePhotos`, {
+      user_id: userId,
+    });
+    const photos = photosRes.data.result;
+    if (!photos || photos.total_count === 0) {
+      console.log("No profile picture found.");
+      return null;
+    }
+
+    const fileId = photos.photos[0][0].file_id;
+    const fileRes = await axios.post(`${TELEGRAM_API}/getFile`, {
+      file_id: fileId,
+    });
+
+    const filePath = fileRes.data.result.file_path;
+    const fileUrl = `${TELEGRAM_FILE_API}/${filePath}`;
+    return fileUrl;
+  } catch (error) {
+    console.error("Error fetching profile picture:", error.message);
+    return null;
+  }
+}
+
 server.get("/referrallink", (req, res) => {
   let { id } = req?.query;
   let link = `https://t.me/pomeme_bot?start=${id}`;
@@ -248,6 +276,23 @@ server.get("/user", async (req, res) => {
     return res.status(200).send(data);
   } catch (error) {
     res.status(500).send("Something went wrong");
+  }
+});
+
+server.get('/profilepic/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const imageUrl = await fetchUserProfilePic(userId);
+    if (imageUrl) {
+      const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+      res.set('Content-Type', 'image/jpeg');
+      res.send(imageResponse.data);
+    } else {
+      res.status(404).send('No profile picture found.');
+    }
+  } catch (error) {
+    console.error('Error fetching image:', error.message);
+    res.status(500).send('Internal Server Error');
   }
 });
 
