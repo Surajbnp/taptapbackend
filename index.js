@@ -149,7 +149,7 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
                 {
                   $push: { referred: referredUserData },
                   $inc: { userScore: 20000 },
-                }
+                } 
               );
 
               bot.sendMessage(
