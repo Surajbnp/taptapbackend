@@ -149,7 +149,7 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
                 {
                   $push: { referred: referredUserData },
                   $inc: { userScore: 20000 },
-                } 
+                }
               );
 
               bot.sendMessage(
@@ -242,11 +242,37 @@ server.get("/", (req, res) => {
 
 server.post("/create", async (req, res) => {
   let { id } = req?.query;
+  let { userScore, gotInitalReward } = req?.body;
+
   try {
-    let newUser = await UserModel.create({ userId: id });
-    res.status(200).send({ msg: "new user created!", data: newUser });
+    let existingUser = await UserModel.findOne({ userId: id });
+
+    if (existingUser) {
+      if (!existingUser.gotInitalReward) {
+        existingUser.userScore += userScore || 0;
+        existingUser.gotInitalReward = true;
+        await existingUser.save();
+
+        return res.status(200).send({
+          msg: "User updated with initial reward!",
+          data: existingUser,
+        });
+      } else {
+        return res.status(200).send({
+          msg: "User already exists and got initial reward!",
+          data: existingUser,
+        });
+      }
+    }
+    let newUser = await UserModel.create({
+      userId: id,
+      gotInitalReward: gotInitalReward || false,
+      userScore: userScore || 0,
+    });
+
+    res.status(201).send({ msg: "New user created!", data: newUser });
   } catch (err) {
-    res.status(400).send({ msg: "something went wrong!", err: err });
+    res.status(400).send({ msg: "Something went wrong!", error: err.message });
   }
 });
 
