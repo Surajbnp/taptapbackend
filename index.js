@@ -64,7 +64,7 @@ bot.on("message", async (msg) => {
 
     await bot.sendPhoto(
       chatId,
-      "https://i.pinimg.com/564x/27/ea/74/27ea74b396d558d33c4ed48592d50ef8.jpg",
+      "https://pomeme.s3.ap-south-1.amazonaws.com/Poop_coin.png",
       {
         caption:
           "🎮 **Pomeme Tap Game**\n\n💡 Tap to test your speed and set new high scores!",
